@@ -60,6 +60,12 @@ func set(w http.ResponseWriter, r *http.Request) {
 	}
 
 	service := r.Form.Get("service")
+
+	if service == "" {
+		http.Error(w, "Service name is missing", http.StatusBadRequest)
+		return
+	}
+
 	portStr := r.Form.Get("port")
 
 	if len(portStr) > 0 {
