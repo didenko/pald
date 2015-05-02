@@ -67,12 +67,13 @@ func (r *Registry) Alloc(name string, addr ...string) (uint16, error) {
 	r.Lock()
 	defer r.Unlock()
 
-	port, err := r.portAlloc()
 	_, name_taken := r.byname[name]
 
 	if name_taken {
 		return 0, fmt.Errorf("Name %q is already taken", name)
 	}
+
+	port, err := r.portFind()
 
 	if err != nil {
 		return 0, err
@@ -130,7 +131,7 @@ type service struct {
 	addr []string
 }
 
-func (r *Registry) portAlloc() (uint16, error) {
+func (r *Registry) portFind() (uint16, error) {
 
 	for p, next := r.port_next, r.port_next <= r.port_max; next; p, next = p+1, p < r.port_max {
 
