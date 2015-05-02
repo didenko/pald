@@ -22,5 +22,5 @@ package main
 import "github.com/didenko/pald/internal/server"
 
 func main() {
-	server.Run(8001)
+	server.Run(8001, 49200, 49299)
 }
