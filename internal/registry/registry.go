@@ -58,7 +58,7 @@ func (r *Registry) Lookup(name string) (uint16, []string, error) {
 	r.RUnlock()
 
 	if !ok {
-		return 0, nil, fmt.Errorf("Name \"%q\" not found in the port registry", name)
+		return 0, nil, fmt.Errorf("Name %q not found in the port registry", name)
 	}
 
 	return svc.port, svc.addr, nil
