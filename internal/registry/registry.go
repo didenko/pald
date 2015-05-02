@@ -26,11 +26,11 @@ import (
 
 type Registry struct {
 	sync.RWMutex
-	byname    map[string]*service
-	byport    map[uint16]*service
-	port_min  uint16
-	port_max  uint16
-	port_next uint16
+	byname   map[string]*service
+	byport   map[uint16]*service
+	portMin  uint16
+	portMax  uint16
+	portNext uint16
 }
 
 func New(min, max uint16) (*Registry, error) {
@@ -41,11 +41,11 @@ func New(min, max uint16) (*Registry, error) {
 	}
 
 	return &Registry{
-		byname:    make(map[string]*service, 100),
-		byport:    make(map[uint16]*service, 100),
-		port_min:  min,
-		port_max:  max,
-		port_next: min,
+		byname:   make(map[string]*service, 100),
+		byport:   make(map[uint16]*service, 100),
+		portMin:  min,
+		portMax:  max,
+		portNext: min,
 	}, nil
 }
 
@@ -95,8 +95,8 @@ func (r *Registry) Forget(port uint16) {
 		delete(r.byname, svc.name)
 	}
 
-	if port < r.port_next {
-		r.port_next = port
+	if port < r.portNext {
+		r.portNext = port
 	}
 }
 
@@ -133,7 +133,7 @@ type service struct {
 
 func (r *Registry) portFind() (uint16, error) {
 
-	for p, next := r.port_next, r.port_next <= r.port_max; next; p, next = p+1, p < r.port_max {
+	for p, next := r.portNext, r.portNext <= r.portMax; next; p, next = p+1, p < r.portMax {
 
 		_, taken := r.byport[p]
 
