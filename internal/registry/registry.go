@@ -49,7 +49,7 @@ func New(min, max uint16) (*Registry, error) {
 	}, nil
 }
 
-func (r *Registry) Query(name string) (uint16, []string, error) {
+func (r *Registry) Lookup(name string) (uint16, []string, error) {
 
 	r.RLock()
 	svc, ok := r.byname[name]

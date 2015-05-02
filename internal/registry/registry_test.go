@@ -167,12 +167,12 @@ func TestRegistry(t *testing.T) {
 }
 
 func matches(r *Registry, name string, port uint16) error {
-	p, _, err := r.Query(name)
+	p, _, err := r.Lookup(name)
 	if err != nil {
 		return err
 	}
 	if p != port {
-		return fmt.Errorf("Querying %q returned %d instead of expected %d",
+		return fmt.Errorf("Looking up %q returned %d instead of expected %d",
 			name, p, port)
 	}
 	return nil
