@@ -18,3 +18,28 @@
 */
 
 package server
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/didenko/pald/internal/registry"
+)
+
+var reg, err = registry.New(49200, 49299)
+
+func init() {
+	if err != nil {
+		log.Panic(err)
+	}
+
+	http.HandleFunc("/get", get)
+	http.HandleFunc("/set", set)
+	http.HandleFunc("/del", del)
+
+}
+
+func Run(port uint16) {
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+}

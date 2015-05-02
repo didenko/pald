@@ -18,3 +18,103 @@
 */
 
 package server
+
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+)
+
+func get(w http.ResponseWriter, r *http.Request) {
+
+	err = r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	service := r.Form.Get("service")
+
+	if service == "" {
+		http.Error(w, "Service name is missing", http.StatusBadRequest)
+		return
+	}
+
+	port, _, err := reg.Lookup(service)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Add("Content-Type", "text/plain")
+	fmt.Fprintf(w, "%d\n", port)
+}
+
+func set(w http.ResponseWriter, r *http.Request) {
+
+	err = r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	service := r.Form.Get("service")
+	portStr := r.Form.Get("port")
+
+	if len(portStr) > 0 {
+
+		port, err := strconv.ParseUint(portStr, 10, 16)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = reg.Fix(uint16(port), service)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusPreconditionFailed)
+			return
+		}
+
+		w.Header().Add("Content-Type", "text/plain")
+		fmt.Fprintln(w, "OK")
+
+	} else {
+
+		port, err := reg.Alloc(service)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusPreconditionFailed)
+			return
+		}
+
+		w.Header().Add("Content-Type", "text/plain")
+		fmt.Fprintf(w, "%d\n", port)
+	}
+}
+
+func del(w http.ResponseWriter, r *http.Request) {
+
+	err = r.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	portStr := r.Form.Get("port")
+
+	if portStr == "" {
+		http.Error(w, "Service name is missing", http.StatusBadRequest)
+		return
+	}
+
+	port, err := strconv.ParseUint(portStr, 10, 16)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	reg.Forget(uint16(port))
+
+	w.Header().Add("Content-Type", "text/plain")
+	fmt.Fprintln(w, "OK")
+}

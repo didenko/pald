@@ -97,11 +97,11 @@ func (r *Registry) Forget(port uint16) {
 	r.Lock()
 	defer r.Unlock()
 
-	delete(r.byport, port)
-
 	if svc, ok := r.byport[port]; ok {
 		delete(r.byname, svc.name)
 	}
+
+	delete(r.byport, port)
 
 	if port < r.portNext {
 		r.portNext = port
