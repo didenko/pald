@@ -116,7 +116,7 @@ func TestRegistry(t *testing.T) {
 
 		if mock.name == "fixed" {
 
-			err = reg.Fixed(mock.port, name)
+			err = reg.Fix(mock.port, name)
 			if (err == nil) != mock.addok {
 				t.Error(err)
 				continue

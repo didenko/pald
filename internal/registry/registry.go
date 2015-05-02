@@ -100,7 +100,7 @@ func (r *Registry) Forget(port uint16) {
 	}
 }
 
-func (r *Registry) Fixed(port uint16, name string, addr ...string) error {
+func (r *Registry) Fix(port uint16, name string, addr ...string) error {
 
 	r.Lock()
 	defer r.Unlock()
