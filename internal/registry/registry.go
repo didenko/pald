@@ -33,6 +33,7 @@ type Registry struct {
 	portNext uint16
 }
 
+// Create New port registry with given boundaries
 func New(min, max uint16) (*Registry, error) {
 	if min > max {
 		return nil,
@@ -49,6 +50,7 @@ func New(min, max uint16) (*Registry, error) {
 	}, nil
 }
 
+// Lookup service details by it's symbolic name
 func (r *Registry) Lookup(name string) (uint16, []string, error) {
 
 	r.RLock()
@@ -62,6 +64,10 @@ func (r *Registry) Lookup(name string) (uint16, []string, error) {
 	return svc.port, svc.addr, nil
 }
 
+// Alloc attempts registering a service by it's symbolic name
+// into a dynamically found port number. The function fails if
+// the symbolic name is already registered or no more dynamic
+// ports available in the pool
 func (r *Registry) Alloc(name string, addr ...string) (uint16, error) {
 
 	r.Lock()
@@ -84,6 +90,8 @@ func (r *Registry) Alloc(name string, addr ...string) (uint16, error) {
 	return port, nil
 }
 
+// Forget removes service associated with the specified port.
+// If the port is not in the registry, no error generated.
 func (r *Registry) Forget(port uint16) {
 
 	r.Lock()
@@ -100,6 +108,10 @@ func (r *Registry) Forget(port uint16) {
 	}
 }
 
+// Fix records a static port mapipng to a symbolic name. It errors
+// if either port or service are already in the registry. Fix allows
+// to register a port at any unassigned number, even outside the
+// registry's min-max range for dynamic allocations.
 func (r *Registry) Fix(port uint16, name string, addr ...string) error {
 
 	r.Lock()
