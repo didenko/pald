@@ -103,7 +103,7 @@ func del(w http.ResponseWriter, r *http.Request) {
 	portStr := r.Form.Get("port")
 
 	if portStr == "" {
-		http.Error(w, "Service name is missing", http.StatusBadRequest)
+		http.Error(w, "Port number is missing", http.StatusBadRequest)
 		return
 	}
 
