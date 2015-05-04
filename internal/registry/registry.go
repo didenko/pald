@@ -85,12 +85,12 @@ func (r *Registry) Alloc(name string, addr ...string) (uint16, error) {
 		return 0, err
 	}
 
-	r.setSvc(port, name, addr...)
+	r.createSvc(port, name, addr...)
 
 	return port, nil
 }
 
-// Forget removes service associated with the specified port.
+// Forget removes the service associated with the specified port.
 // If the port is not in the registry, no error generated.
 func (r *Registry) Forget(port uint16) {
 
@@ -132,7 +132,7 @@ func (r *Registry) Fix(port uint16, name string, addr ...string) error {
 		return fmt.Errorf("Port %d is already taken", port)
 	}
 
-	r.setSvc(port, name, addr...)
+	r.createSvc(port, name, addr...)
 
 	return nil
 }
@@ -157,8 +157,16 @@ func (r *Registry) portFind() (uint16, error) {
 	return 0, fmt.Errorf("No ports available")
 }
 
-func (r *Registry) setSvc(port uint16, name string, addr ...string) {
+func (r *Registry) setSvc(svc *service) error {
+	// check valid service values here
+	r.byname[svc.name] = svc
+	r.byport[svc.port] = svc
+	return nil
+}
+
+func (r *Registry) createSvc(port uint16, name string, addr ...string) error {
 	svc := &service{port, name, addr}
-	r.byname[name] = svc
-	r.byport[port] = svc
+	return r.setSvc(svc)
+}
+
 }
