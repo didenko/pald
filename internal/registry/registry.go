@@ -20,7 +20,12 @@
 package registry
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -169,4 +174,64 @@ func (r *Registry) createSvc(port uint16, name string, addr ...string) error {
 	return r.setSvc(svc)
 }
 
+// Write writes out all registry's services
+func (r *Registry) Write(w io.Writer) (err error) {
+
+	buf := bufio.NewWriter(w)
+	min, max := uint16(0), ^uint16(0)
+
+	for p, next := min, min < max; next; p, next = p+1, p < max {
+
+		if s, ok := r.byport[p]; ok {
+
+			_, err = fmt.Fprintf(buf, "%s\t%d\t%s\n", s.name, s.port, strings.Join(s.addr, ","))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return buf.Flush()
+}
+
+var reService = regexp.MustCompile(`^(?:\s*(?P<name>[\w\-\.]+)\s+(?P<port>\d+)(?:\s+(?P<addr>[,\.\-_:\w]+))?)?\s*(?:\#(?P<comment>.*))?$`)
+
+func parseSvc(line string) (*service, error) {
+
+	// o:line, 1:name, 2:port, 3:addr, 4:comment
+	fields := reService.FindStringSubmatch(line)
+	if fields == nil {
+		return nil, fmt.Errorf("The line fails to match a service definition: %q", line)
+	}
+
+	port64, err := strconv.ParseUint(fields[2], 10, 16)
+	if err != nil {
+		return nil, fmt.Errorf("Port spec %q failes to parse into 16-bit unsigned integer: %s", fields[2], err.Error())
+	}
+
+	return &service{
+		uint16(port64),
+		fields[1],
+		strings.Split(fields[3], ","),
+	}, nil
+}
+
+// Read reads all the services from r.
+func (reg *Registry) Read(r io.Reader) (err error) {
+
+	scanner := bufio.NewScanner(r)
+
+	for scanner.Scan() {
+		service, err := parseSvc(scanner.Text())
+		if err != nil {
+			return err
+		}
+
+		reg.setSvc(service)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
