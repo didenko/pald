@@ -100,9 +100,6 @@ func stringSlicesDiffer(a, b []string) bool {
 		return true
 	}
 	for i, e := range a {
-		if i >= len(b) {
-			return true
-		}
 		if e != b[i] {
 			return true
 		}
