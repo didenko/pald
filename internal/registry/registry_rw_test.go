@@ -117,7 +117,35 @@ func TestWrite(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
-	t.Error("Test not implemented")
+	read_dst := "./reg_read.test"
+
+	defer os.Remove(read_dst)
+
+	err := ioutil.WriteFile(read_dst, mockText, 0644)
+	if err != nil {
+		t.Error(err)
+	}
+
+	readHandle, err := os.Open(read_dst)
+	if err != nil {
+		t.Error(err)
+	}
+
+	reg, err := New(1, 10)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = reg.Read(readHandle)
+	if err != nil {
+		t.Error(err)
+	}
+
+	mocked := mockRegistry(t)
+
+	if !reflect.DeepEqual(reg, mocked) {
+		t.Error("The registry did not read correctly from the file")
+	}
 }
 
 var mockText = []byte(`fixed_0	0	0.0.0.0
