@@ -83,28 +83,10 @@ func TestReService(t *testing.T) {
 	}
 
 	for _, mock := range mocks {
-		if stringSlicesDiffer(reService.FindStringSubmatch(mock.line), mock.expected) {
+		if !reflect.DeepEqual(reService.FindStringSubmatch(mock.line), mock.expected) {
 			t.Errorf("The line failed service parsing: %q", mock.line)
 		}
 	}
-}
-
-func stringSlicesDiffer(a, b []string) bool {
-	if a == nil && b == nil {
-		return false
-	}
-	if a == nil || b == nil {
-		return true
-	}
-	if len(a) != len(b) {
-		return true
-	}
-	for i, e := range a {
-		if e != b[i] {
-			return true
-		}
-	}
-	return false
 }
 
 func TestWrite(t *testing.T) {
