@@ -18,6 +18,9 @@ package registry
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"reflect"
 	"testing"
 )
 
@@ -105,15 +108,38 @@ func stringSlicesDiffer(a, b []string) bool {
 }
 
 func TestWrite(t *testing.T) {
-	_ = mockRegistry(t)
-	// reg := mockRegistry(t)
+	write_dst := "./reg_write.test"
 
-	t.Error("Test not implemented")
+	defer os.Remove(write_dst)
+	reg := mockRegistry(t)
+
+	dst, err := os.Create(write_dst)
+	if err != nil {
+		t.Error(err)
+	}
+
+	reg.Write(dst)
+
+	result, err := ioutil.ReadFile(write_dst)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(result, mockText) {
+		t.Errorf("Expected and written differ. Written: %s", result)
+	}
 }
 
 func TestRead(t *testing.T) {
 	t.Error("Test not implemented")
 }
+
+var mockText = []byte(`fixed_0	0	0.0.0.0
+alloc_1	1	0.0.0.0,1.1.1.1
+fixed_2	2	
+alloc_3	3	0.0.0.0,1.1.1.1,2.2.2.2
+fixed_9	9	0.0.0.0,1.1.1.1,2.2.2.2,3.3.3.3
+`)
 
 func mockRegistry(t *testing.T) *Registry {
 
@@ -133,17 +159,22 @@ func mockRegistry(t *testing.T) *Registry {
 		t.Fatal("Failed to create a mock registry")
 	}
 
-	for _, mock := range mocks {
+	for m, mock := range mocks {
 
-		name := fmt.Sprintf("%s %d", mock.name, mock.port)
+		name := fmt.Sprintf("%s_%d", mock.name, mock.port)
+
+		addr := make([]string, m)
+		for i := 0; i < m; i++ {
+			addr[i] = fmt.Sprintf("%d.%d.%d.%d", i, i, i, i)
+		}
 
 		if mock.name == "fixed" {
-			err = reg.Fix(mock.port, name)
+			err = reg.Fix(mock.port, name, addr...)
 			if err != nil {
 				t.Fatal(err)
 			}
 		} else {
-			_, err = reg.Alloc(name)
+			_, err = reg.Alloc(name, addr...)
 			if err != nil {
 				t.Error(err)
 			}
