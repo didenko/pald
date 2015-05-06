@@ -93,6 +93,7 @@ func TestWrite(t *testing.T) {
 	write_dst := "./reg_write.test"
 
 	defer os.Remove(write_dst)
+
 	reg := mockRegistry(t)
 
 	dst, err := os.Create(write_dst)
@@ -100,7 +101,10 @@ func TestWrite(t *testing.T) {
 		t.Error(err)
 	}
 
-	reg.Write(dst)
+	err = reg.Write(dst)
+	if err != nil {
+		t.Error(err)
+	}
 
 	result, err := ioutil.ReadFile(write_dst)
 	if err != nil {
