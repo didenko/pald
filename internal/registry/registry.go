@@ -110,35 +110,6 @@ func (r *Registry) Forget(port uint16) {
 	}
 }
 
-// Fix records a static port mapipng to a symbolic name. It errors
-// if either port or service are already in the registry. Fix allows
-// to register a port at any unassigned number, even outside the
-// registry's min-max range for dynamic allocations.
-func (r *Registry) Fix(port uint16, name string, addr ...string) error {
-
-	r.Lock()
-	defer r.Unlock()
-
-	_, name_taken := r.byname[name]
-	_, port_taken := r.byport[port]
-
-	if name_taken && port_taken {
-		return fmt.Errorf("Name %q and port %d are already registered", name, port)
-	}
-
-	if name_taken {
-		return fmt.Errorf("Name %q is already taken", name)
-	}
-
-	if port_taken {
-		return fmt.Errorf("Port %d is already taken", port)
-	}
-
-	r.createSvc(port, name, addr...)
-
-	return nil
-}
-
 type service struct {
 	port uint16
 	name string

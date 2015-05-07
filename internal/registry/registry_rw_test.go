@@ -116,6 +116,7 @@ func TestWrite(t *testing.T) {
 	}
 }
 
+// FIXME: redo this test
 func TestRead(t *testing.T) {
 	read_dst := "./reg_read.test"
 
@@ -148,11 +149,11 @@ func TestRead(t *testing.T) {
 	}
 }
 
-var mockText = []byte(`fixed_0	0	0.0.0.0
-alloc_1	1	0.0.0.0,1.1.1.1
-fixed_2	2	
-alloc_3	3	0.0.0.0,1.1.1.1,2.2.2.2
-fixed_9	9	0.0.0.0,1.1.1.1,2.2.2.2,3.3.3.3
+var mockText = []byte(`svc_2	1	
+svc_0	2	0.0.0.0
+svc_1	3	0.0.0.0,1.1.1.1
+svc_3	4	0.0.0.0,1.1.1.1,2.2.2.2
+svc_9	5	0.0.0.0,1.1.1.1,2.2.2.2,3.3.3.3
 `)
 
 func mockRegistry(t *testing.T) *Registry {
@@ -161,11 +162,11 @@ func mockRegistry(t *testing.T) *Registry {
 		port uint16
 		name string
 	}{
-		{port: 2, name: "fixed"},
-		{port: 0, name: "fixed"},
-		{port: 1, name: "alloc"},
-		{port: 3, name: "alloc"},
-		{port: 9, name: "fixed"},
+		{port: 2, name: "svc"},
+		{port: 0, name: "svc"},
+		{port: 1, name: "svc"},
+		{port: 3, name: "svc"},
+		{port: 9, name: "svc"},
 	}
 
 	reg, err := New(1, 10)
@@ -182,16 +183,9 @@ func mockRegistry(t *testing.T) *Registry {
 			addr[i] = fmt.Sprintf("%d.%d.%d.%d", i, i, i, i)
 		}
 
-		if mock.name == "fixed" {
-			err = reg.Fix(mock.port, name, addr...)
-			if err != nil {
-				t.Fatal(err)
-			}
-		} else {
-			_, err = reg.Alloc(name, addr...)
-			if err != nil {
-				t.Error(err)
-			}
+		_, err = reg.Alloc(name, addr...)
+		if err != nil {
+			t.Error(err)
 		}
 	}
 

@@ -63,36 +63,14 @@ func set(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	portStr := r.Form.Get("port")
-
-	if len(portStr) > 0 {
-
-		port, err := strconv.ParseUint(portStr, 10, 16)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		err = reg.Fix(uint16(port), service)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusPreconditionFailed)
-			return
-		}
-
-		w.Header().Add("Content-Type", "text/plain")
-		fmt.Fprintln(w, "OK")
-
-	} else {
-
-		port, err := reg.Alloc(service)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusPreconditionFailed)
-			return
-		}
-
-		w.Header().Add("Content-Type", "text/plain")
-		fmt.Fprintf(w, "%d\n", port)
+	port, err := reg.Alloc(service)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+		return
 	}
+
+	w.Header().Add("Content-Type", "text/plain")
+	fmt.Fprintf(w, "%d\n", port)
 }
 
 func del(w http.ResponseWriter, r *http.Request) {

@@ -77,7 +77,15 @@ func TestAddAllocHigh(t *testing.T) {
 	}
 }
 
-// Test generic use cases of fixing, allocating, querying,
+type action int
+
+const (
+	add action = iota
+	del
+	chk
+)
+
+// Test generic use cases of allocating, querying,
 // and forgetting port assignments
 func TestRegistry(t *testing.T) {
 	const (
@@ -90,75 +98,79 @@ func TestRegistry(t *testing.T) {
 		t.Errorf("Failed to create a registry with min=%d and max=%d", min, max)
 	}
 
-	mocks := []struct {
-		port  uint16
-		name  string
-		addok bool
-		del   bool
+	mocks := [][]struct {
+		act  action
+		name string
+		port uint16
+		ok   bool
 	}{
-		{port: 2, name: "fixed", addok: true, del: false},
-		{port: 0, name: "fixed", addok: true, del: false},
-		{port: 1, name: "alloc", addok: true, del: true},
-		{port: 3, name: "alloc", addok: true, del: false},
-		{port: 1, name: "fixed", addok: false, del: true},
-		{port: 4, name: "alloc", addok: false, del: false},
-		{port: 9, name: "fixed", addok: true, del: true},
+		{
+			{act: add, name: "svc 3", port: 0, ok: true},
+			{act: add, name: "svc 6", port: 1, ok: true},
+			{act: add, name: "svc 3", port: 0, ok: false},
+			{act: add, name: "svc 1", port: 2, ok: true},
+			{act: add, name: "svc 9", port: 3, ok: true},
+			{act: add, name: "extra", port: 0, ok: false},
+		},
+		{
+			{act: del, name: "svc 6", port: 1, ok: true},
+			{act: del, name: "svc 9", port: 3, ok: true},
+			{act: chk, name: "svc 6", port: 1, ok: false},
+			{act: chk, name: "svc 9", port: 3, ok: false},
+		},
+		{
+			{act: add, name: "svc 9", port: 1, ok: true},
+			{act: add, name: "svc 1", port: 0, ok: false},
+			{act: add, name: "svc 2", port: 3, ok: true},
+		},
+		{
+			{act: chk, name: "svc 3", port: 0, ok: true},
+			{act: chk, name: "svc 1", port: 1, ok: true},
+			{act: chk, name: "svc 1", port: 2, ok: true},
+			{act: chk, name: "svc 2", port: 3, ok: true},
+		},
 	}
 
-	mockMap := make(map[uint16]int)
+	for runid, run := range mocks {
 
-	for _, mock := range mocks {
+		for line, mock := range run {
 
-		name := fmt.Sprintf("%s %d", mock.name, mock.port)
+			switch mock.act {
 
-		if mock.name == "fixed" {
+			case add:
 
-			err = reg.Fix(mock.port, name)
-			if (err == nil) != mock.addok {
-				t.Error(err)
-				continue
-			}
+				p, err := reg.Alloc(mock.name)
+				if (err == nil) != mock.ok {
+					if err == nil {
+						t.Errorf("Run %d mock %d: got port %d unexpectedly", runid, line, p)
+					} else {
+						t.Errorf("Run %d mock %d: %q", runid, line, err.Error())
+					}
+					continue
+				}
 
-		} else {
+			case del:
+				reg.Forget(mock.port)
 
-			_, err = reg.Alloc(name)
-			if (err == nil) != mock.addok {
-				t.Error(err)
-				continue
-			}
-		}
-	}
+			case chk:
 
-	for line, mock := range mocks {
-		if mock.del {
-			reg.Forget(mock.port)
-		} else {
-			if mock.addok {
-				mockMap[mock.port] = line
+				p, _, err := reg.Lookup(mock.name)
+				if (err == nil) != mock.ok {
+					if err == nil {
+						t.Errorf("Run %d mock %d: got port %d unexpectedly", runid, line, p)
+					} else {
+						t.Errorf("Run %d mock %d: %q", runid, line, err.Error())
+					}
+					continue
+				}
 			}
 		}
 	}
 
 	pmax := ^uint16(0)
-	for p, next := uint16(0), 0 < pmax; next; p, next = p+1, p < pmax {
-
-		midx, mOk := mockMap[p]
-
-		svc, sOk := reg.byport[p]
-
-		if sOk == mOk {
-			if mOk && svc.name != fmt.Sprintf("%s %d", mocks[midx].name, mocks[midx].port) {
-				t.Errorf("Service names do not match for port %d", p)
-				if err := matches(reg, mocks[midx].name, mocks[midx].port); err != nil {
-					t.Error(err)
-				}
-			}
-
-		} else if sOk {
+	for p, next := uint16(max+1), 0 < pmax; next; p, next = p+1, p < pmax {
+		if svc, sOk := reg.byport[p]; sOk {
 			t.Errorf("Unexpected service registered at port %d as %q", p, svc.name)
-
-		} else if mocks[midx].addok && !mocks[midx].del {
-			t.Errorf("Missing service expected at port %d as %q", p, mocks[midx].name)
 		}
 	}
 }
