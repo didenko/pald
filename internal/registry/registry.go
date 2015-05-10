@@ -165,6 +165,16 @@ var reService = regexp.MustCompile(`^(?:\s*(?P<name>[\w\-\.]+)\s+(?P<port>\d+)(?
 
 func parseSvc(line string) (*service, error) {
 
+	compact := func(a []string) []string {
+		b := make([]string, 0, len(a)/2)
+		for _, e := range a {
+			if e != "" {
+				b = append(b, e)
+			}
+		}
+		return b
+	}
+
 	// o:line, 1:name, 2:port, 3:addr, 4:comment
 	fields := reService.FindStringSubmatch(line)
 	if fields == nil {
@@ -179,7 +189,7 @@ func parseSvc(line string) (*service, error) {
 	return &service{
 		uint16(port64),
 		fields[1],
-		strings.Split(fields[3], ","),
+		compact(strings.Split(fields[3], ",")),
 	}, nil
 }
 

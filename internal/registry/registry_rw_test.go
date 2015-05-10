@@ -145,7 +145,7 @@ func TestRead(t *testing.T) {
 	mocked := mockRegistry(t)
 
 	if !reflect.DeepEqual(reg, mocked) {
-		t.Error("The registry did not read correctly from the file")
+		t.Errorf("The registries differ after reading from the file")
 	}
 }
 
