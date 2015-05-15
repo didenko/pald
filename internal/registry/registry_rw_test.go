@@ -101,7 +101,7 @@ func TestWrite(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = reg.Write(dst)
+	err = reg.Dump(dst)
 	if err != nil {
 		t.Error(err)
 	}
@@ -116,7 +116,6 @@ func TestWrite(t *testing.T) {
 	}
 }
 
-// FIXME: redo this test
 func TestRead(t *testing.T) {
 	read_dst := "./reg_read.test"
 
@@ -137,7 +136,7 @@ func TestRead(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = reg.Read(readHandle)
+	err = reg.Load(readHandle)
 	if err != nil {
 		t.Error(err)
 	}
