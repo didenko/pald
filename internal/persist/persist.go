@@ -29,29 +29,26 @@ type Loader interface {
 	Load(r io.Reader) (err error)
 }
 
-func Persist(src Dumper, dst io.Writer, throttle time.Duration) chan bool {
+func Persist(src Dumper, dst io.Writer, throttle time.Duration) chan struct{} {
 
 	defer src.Dump(dst)
 
-	knob := make(chan bool, 10)
+	knob := make(chan struct{}, 10)
 
 	go func() {
 
 		for {
 
-			var (
-				active, ok bool
-				last       = time.Now()
-			)
+			last := time.Now()
 
 			select {
 
-			case active, ok = <-knob:
+			case _, ok := <-knob:
 				if !ok {
 					break
 				}
 
-				if active && (time.Since(last) > throttle) {
+				if time.Since(last) > throttle {
 					src.Dump(dst)
 				}
 			}
