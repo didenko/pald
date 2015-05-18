@@ -17,29 +17,15 @@
 package persist
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/didenko/pald/internal/registry"
 )
 
-type StringWriter struct {
-	s string
-}
-
-func (sw *StringWriter) Write(p []byte) (n int, err error) {
-	sw.s = fmt.Sprintf("%s", p)
-	return len(sw.s), nil
-}
-
-func (sw *StringWriter) Get() string {
-	return sw.s
-}
-
 func TestPersist(t *testing.T) {
 	r, _ := registry.New(0, 10)
-	s := new(StringWriter)
+	s := new(StringReadWriteSeeker)
 	d := 100 * time.Millisecond
 	var b struct{}
 
@@ -78,5 +64,23 @@ func TestPersist(t *testing.T) {
 
 	if w := s.Get(); w != "svc_0\t0\t\nsvc_1\t1\t127.0.0.1,::1\n" {
 		t.Errorf("A wrong string written. Received %q\n", w)
+	}
+}
+
+func TestLoad(t *testing.T) {
+	s := new(StringReadWriteSeeker)
+	s.Set("svc_0\t0\t\nsvc_1\t1\t127.0.0.1,::1\n")
+
+	rBuild, _ := registry.New(0, 10)
+	_, _ = rBuild.Alloc("svc_0")
+	_, _ = rBuild.Alloc("svc_1", "127.0.0.1", "::1")
+
+	rLoaded, _ := registry.New(0, 10)
+	if err := Load(s, rLoaded); err != nil {
+		t.Fatal(err)
+	}
+
+	if !rBuild.Equal(rLoaded) {
+		t.Error("Build and loaded registries differ.\n", rBuild, "\n", rLoaded)
 	}
 }

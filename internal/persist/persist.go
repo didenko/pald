@@ -29,7 +29,7 @@ type Loader interface {
 	Load(r io.Reader) (err error)
 }
 
-func Persist(src Dumper, dst io.Writer, throttle time.Duration) chan struct{} {
+func Persist(src Dumper, dst io.ReadWriteSeeker, throttle time.Duration) chan struct{} {
 
 	defer src.Dump(dst)
 
@@ -49,6 +49,7 @@ func Persist(src Dumper, dst io.Writer, throttle time.Duration) chan struct{} {
 				}
 
 				if time.Since(last) > throttle {
+					dst.Seek(0, 0)
 					src.Dump(dst)
 				}
 			}
@@ -58,6 +59,7 @@ func Persist(src Dumper, dst io.Writer, throttle time.Duration) chan struct{} {
 	return knob
 }
 
-func Load(src io.Reader, dst Loader) error {
+func Load(src io.ReadWriteSeeker, dst Loader) error {
+	src.Seek(0, 0)
 	return dst.Load(src)
 }
