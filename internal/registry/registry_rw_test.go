@@ -143,7 +143,7 @@ func TestRead(t *testing.T) {
 
 	mocked := mockRegistry(t)
 
-	if !reflect.DeepEqual(reg, mocked) {
+	if !reg.Equal(mocked) {
 		t.Errorf("The registries differ after reading from the file")
 	}
 }
@@ -180,6 +180,9 @@ func mockRegistry(t *testing.T) *Registry {
 		addr := make([]string, m)
 		for i := 0; i < m; i++ {
 			addr[i] = fmt.Sprintf("%d.%d.%d.%d", i, i, i, i)
+		}
+		if len(addr) == 0 {
+			addr = nil
 		}
 
 		_, err = reg.Alloc(name, addr...)
