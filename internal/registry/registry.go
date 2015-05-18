@@ -142,7 +142,7 @@ func (r *Registry) createSvc(port uint16, name string, addr ...string) error {
 	return r.setSvc(svc)
 }
 
-// Write writes out all registry's services
+// Dump writes out all registry's services
 func (r *Registry) Dump(w io.Writer) (err error) {
 
 	r.RLock()
@@ -196,7 +196,7 @@ func parseSvc(line string) (*service, error) {
 	}, nil
 }
 
-// Read reads all the services from r.
+// Load reads all the services from r.
 func (reg *Registry) Load(r io.Reader) (err error) {
 
 	reg.Lock()
@@ -205,6 +205,7 @@ func (reg *Registry) Load(r io.Reader) (err error) {
 	scanner := bufio.NewScanner(r)
 
 	for scanner.Scan() {
+
 		service, err := parseSvc(scanner.Text())
 		if err != nil {
 			return err
