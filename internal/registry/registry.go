@@ -20,8 +20,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -110,10 +108,51 @@ func (r *Registry) Forget(port uint16) {
 	}
 }
 
-type service struct {
-	port uint16
-	name string
-	addr []string
+// Dump writes out all registry's services
+func (r *Registry) Dump(w io.Writer) (err error) {
+
+	r.RLock()
+	defer r.RUnlock()
+
+	buf := bufio.NewWriter(w)
+	min, max := uint16(0), ^uint16(0)
+
+	for p, next := min, min < max; next; p, next = p+1, p < max {
+
+		if s, ok := r.byport[p]; ok {
+
+			_, err = fmt.Fprintf(buf, "%s\t%d\t%s\n", s.name, s.port, strings.Join(s.addr, ","))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return buf.Flush()
+}
+
+// Load reads all the services from r.
+func (reg *Registry) Load(r io.Reader) (err error) {
+
+	reg.Lock()
+	defer reg.Unlock()
+
+	scanner := bufio.NewScanner(r)
+
+	for scanner.Scan() {
+
+		service, err := parseSvc(scanner.Text())
+		if err != nil {
+			return err
+		}
+
+		reg.setSvc(service)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *Registry) portFind() (uint16, error) {
@@ -142,81 +181,39 @@ func (r *Registry) createSvc(port uint16, name string, addr ...string) error {
 	return r.setSvc(svc)
 }
 
-// Dump writes out all registry's services
-func (r *Registry) Dump(w io.Writer) (err error) {
+// Equal is used in testing only. It is made to be able to debug
+// where the comparison actually fails. The reflect.DeepEqual does
+// not provide enough details to find mismatches deep in the structure.
+func (r *Registry) Equal(rr *Registry) bool {
 
-	r.RLock()
-	defer r.RUnlock()
+	if r.portMin != rr.portMin ||
+		r.portMax != rr.portMax ||
+		r.portNext != rr.portNext ||
+		len(r.byport) != len(rr.byport) ||
+		len(r.byname) != len(rr.byname) {
 
-	buf := bufio.NewWriter(w)
-	min, max := uint16(0), ^uint16(0)
+		return false
+	}
 
-	for p, next := min, min < max; next; p, next = p+1, p < max {
-
-		if s, ok := r.byport[p]; ok {
-
-			_, err = fmt.Fprintf(buf, "%s\t%d\t%s\n", s.name, s.port, strings.Join(s.addr, ","))
-			if err != nil {
-				return err
-			}
+	for p, s := range r.byport {
+		sr, ok := rr.byport[p]
+		if !ok {
+			return false
+		}
+		if !s.equal(sr) {
+			return false
 		}
 	}
-	return buf.Flush()
-}
 
-var reService = regexp.MustCompile(`^(?:\s*(?P<name>[\w\-\.]+)\s+(?P<port>\d+)(?:\s+(?P<addr>[,\.\-_:\w]+))?)?\s*(?:\#(?P<comment>.*))?$`)
-
-func parseSvc(line string) (*service, error) {
-
-	compact := func(a []string) []string {
-		b := make([]string, 0, len(a)/2)
-		for _, e := range a {
-			if e != "" {
-				b = append(b, e)
-			}
+	for n, s := range r.byname {
+		sr, ok := rr.byname[n]
+		if !ok {
+			return false
 		}
-		return b
-	}
-
-	// o:line, 1:name, 2:port, 3:addr, 4:comment
-	fields := reService.FindStringSubmatch(line)
-	if fields == nil {
-		return nil, fmt.Errorf("The line fails to match a service definition: %q", line)
-	}
-
-	port64, err := strconv.ParseUint(fields[2], 10, 16)
-	if err != nil {
-		return nil, fmt.Errorf("Port spec %q failes to parse into 16-bit unsigned integer: %s", fields[2], err.Error())
-	}
-
-	return &service{
-		uint16(port64),
-		fields[1],
-		compact(strings.Split(fields[3], ",")),
-	}, nil
-}
-
-// Load reads all the services from r.
-func (reg *Registry) Load(r io.Reader) (err error) {
-
-	reg.Lock()
-	defer reg.Unlock()
-
-	scanner := bufio.NewScanner(r)
-
-	for scanner.Scan() {
-
-		service, err := parseSvc(scanner.Text())
-		if err != nil {
-			return err
+		if !s.equal(sr) {
+			return false
 		}
-
-		reg.setSvc(service)
 	}
 
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return nil
+	return true
 }
