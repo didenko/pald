@@ -49,7 +49,7 @@ func TestPersist(t *testing.T) {
 		t.Error("Persistence test setup failed")
 	}
 
-	_, _ = r.Alloc("svc 0")
+	_, _ = r.Alloc("svc_0")
 	flush <- b
 
 	if s.Get() != "" {
@@ -60,15 +60,15 @@ func TestPersist(t *testing.T) {
 	flush <- b
 	time.Sleep(100 * time.Millisecond) // wait for Dump to happen in another goroutine
 
-	if w := s.Get(); w != "svc 0\t0\t\n" {
+	if w := s.Get(); w != "svc_0\t0\t\n" {
 		t.Errorf("A wrong string written. Received %q\n", w)
 	}
 
 	flush <- b
-	_, _ = r.Alloc("svc 1", "127.0.0.1", "::1")
+	_, _ = r.Alloc("svc_1", "127.0.0.1", "::1")
 	flush <- b
 
-	if w := s.Get(); w != "svc 0\t0\t\n" {
+	if w := s.Get(); w != "svc_0\t0\t\n" {
 		t.Errorf("Flushing in under timeout should have not change data. Received %q\n", w)
 	}
 
@@ -76,7 +76,7 @@ func TestPersist(t *testing.T) {
 	flush <- b
 	time.Sleep(100 * time.Millisecond) // wait for Dump to happen in another goroutine
 
-	if w := s.Get(); w != "svc 0\t0\t\nsvc 1\t1\t127.0.0.1,::1\n" {
+	if w := s.Get(); w != "svc_0\t0\t\nsvc_1\t1\t127.0.0.1,::1\n" {
 		t.Errorf("A wrong string written. Received %q\n", w)
 	}
 }
