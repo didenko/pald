@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/user"
 
 	"github.com/didenko/pald/internal/server"
+	"github.com/spf13/viper"
 	"github.com/takama/daemon"
 )
 
@@ -30,9 +32,11 @@ const (
 	daemonDesc = "Port Allocator Daemon"
 )
 
-var stdlog, errlog *log.Logger
+var (
+	stdlog, errlog            *log.Logger
+	portMin, portMax, portSvr uint16
+)
 
-// Service has embedded daemon
 type Service struct {
 	daemon.Daemon
 }
@@ -59,12 +63,41 @@ func (service *Service) Manage() (string, error) {
 		}
 	}
 
-	server.Run(8001, 49200, 49299)
+	server.Run(portSvr, portMin, portMax)
 	// never happen, but need to complete code
 	return usage, nil
 }
 
+func downcast(i int, name string) uint16 {
+	if i < 0 || i > 65535 {
+		panic(fmt.Sprintf("Variable %s = %d is not convertible to uint16", name, i))
+	}
+	return uint16(i)
+}
+
 func init() {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	configPath := usr.HomeDir + "/.pald"
+	viper.SetConfigName("config")
+	viper.AddConfigPath(configPath)
+	viper.SetDefault("port_min", 49201)
+	viper.SetDefault("port_max", 49999)
+	viper.SetDefault("port_listen", 49200)
+	viper.SetDefault("dump_file", configPath+"/dump")
+
+	err = viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	portMin = downcast(viper.GetInt("port_min"), "port_min")
+	portMax = downcast(viper.GetInt("port_max"), "port_max")
+	portSvr = downcast(viper.GetInt("port_listen"), "port_listen")
+
 	stdlog = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	errlog = log.New(os.Stderr, "", log.Ldate|log.Ltime)
 }
