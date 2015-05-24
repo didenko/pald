@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 
+	"github.com/didenko/pald/internal/platform"
 	"github.com/didenko/pald/internal/server"
-	"github.com/spf13/viper"
+	"github.com/didenko/viper"
 	"github.com/takama/daemon"
 )
 
@@ -35,6 +35,8 @@ const (
 var (
 	stdlog, errlog            *log.Logger
 	portMin, portMax, portSvr uint16
+
+	platformConfig platform.Config
 )
 
 type Service struct {
@@ -76,22 +78,24 @@ func downcast(i int, name string) uint16 {
 }
 
 func init() {
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	configPath := usr.HomeDir + "/.pald"
+	platformConfig = platform.GetConfig()
+
+	log.Println(platformConfig.DirSystem())
+	log.Println(platformConfig.DirUser())
+
+	viper.AddConfigPath(platformConfig.DirSystem())
+	viper.AddConfigPath(platformConfig.DirUser())
 	viper.SetConfigName("config")
-	viper.AddConfigPath(configPath)
+
 	viper.SetDefault("port_min", 49201)
 	viper.SetDefault("port_max", 49999)
 	viper.SetDefault("port_listen", 49200)
-	viper.SetDefault("dump_file", configPath+"/dump")
+	viper.SetDefault("dump_file", platformConfig.DirUser()+"dump")
 
-	err = viper.ReadInConfig()
+	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		panic(err)
 	}
 
 	portMin = downcast(viper.GetInt("port_min"), "port_min")
