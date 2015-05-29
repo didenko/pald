@@ -22,3 +22,19 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# OSX quirks
+.DS_Store
+
+#
+#  Exclude everything except for the source code
+#
+
+/*
+!/.gitignore
+!/src
+!/vendor
+
+/vendor/*
+!/vendor/src
+
