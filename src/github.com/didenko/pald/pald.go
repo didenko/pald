@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/didenko/pald/internal/platform"
 	"github.com/didenko/pald/internal/server"
@@ -33,8 +34,14 @@ const (
 )
 
 var (
-	stdlog, errlog            *log.Logger
-	portMin, portMax, portSvr uint16
+	stdlog *log.Logger
+	errlog *log.Logger
+
+	portMin uint16
+	portMax uint16
+	portSvr uint16
+
+	dumpName string
 
 	platformConfig platform.Config
 )
@@ -65,7 +72,12 @@ func (service *Service) Manage() (string, error) {
 		}
 	}
 
-	server.Run(portSvr, portMin, portMax)
+	log.Println("Server listens on port: ", portSvr)
+	log.Println("First port for allocation: ", portMin)
+	log.Println("Last  port for allocation: ", portMax)
+	log.Println("Dump file: ", dumpName)
+
+	server.Run(portSvr, portMin, portMax, dumpName)
 	// never happen, but need to complete code
 	return usage, nil
 }
@@ -81,9 +93,6 @@ func init() {
 
 	platformConfig = platform.GetConfig()
 
-	log.Println(platformConfig.DirSystem())
-	log.Println(platformConfig.DirUser())
-
 	viper.AddConfigPath(platformConfig.DirSystem())
 	viper.AddConfigPath(platformConfig.DirUser())
 	viper.SetConfigName("config")
@@ -91,7 +100,7 @@ func init() {
 	viper.SetDefault("port_min", 49201)
 	viper.SetDefault("port_max", 49999)
 	viper.SetDefault("port_listen", 49200)
-	viper.SetDefault("dump_file", platformConfig.DirUser()+"dump")
+	viper.SetDefault("dump_file", path.Join(platformConfig.DirUser(), "dump"))
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -101,6 +110,8 @@ func init() {
 	portMin = downcast(viper.GetInt("port_min"), "port_min")
 	portMax = downcast(viper.GetInt("port_max"), "port_max")
 	portSvr = downcast(viper.GetInt("port_listen"), "port_listen")
+
+	dumpName = viper.GetString("dump_file")
 
 	stdlog = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	errlog = log.New(os.Stderr, "", log.Ldate|log.Ltime)

@@ -25,7 +25,7 @@ import (
 
 func TestPersist(t *testing.T) {
 	r, _ := registry.New(0, 10)
-	s := new(StringReadWriteSeeker)
+	s := new(StringRWST)
 	d := 100 * time.Millisecond
 	var b struct{}
 
@@ -68,7 +68,7 @@ func TestPersist(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	s := new(StringReadWriteSeeker)
+	s := new(StringRWST)
 	s.Set("svc_0\t0\t\nsvc_1\t1\t127.0.0.1,::1\n")
 
 	rBuild, _ := registry.New(0, 10)

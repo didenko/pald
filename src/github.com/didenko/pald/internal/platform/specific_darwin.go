@@ -48,9 +48,9 @@ func init() {
 		log.Fatal(err)
 	}
 
-	config.dir.system = "/Library/Application Support/" + procName + "/"
-	config.dir.user = config.user.HomeDir + "/." + procName + "/"
-	config.dir.instance = "./"
+	config.dir.system = "/Library/Application Support/" + procName
+	config.dir.user = config.user.HomeDir + "/." + procName
+	config.dir.instance = "."
 }
 
 func platformConfig() Config {

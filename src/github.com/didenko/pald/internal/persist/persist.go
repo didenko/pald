@@ -25,11 +25,16 @@ type Dumper interface {
 	Dump(w io.Writer) (err error)
 }
 
+type RWST interface {
+	io.ReadWriteSeeker
+	Truncate(size int64) error
+}
+
 type Loader interface {
 	Load(r io.Reader) (err error)
 }
 
-func Persist(src Dumper, dst io.ReadWriteSeeker, throttle time.Duration) chan struct{} {
+func Persist(src Dumper, dst RWST, throttle time.Duration) chan struct{} {
 
 	defer src.Dump(dst)
 
@@ -50,6 +55,7 @@ func Persist(src Dumper, dst io.ReadWriteSeeker, throttle time.Duration) chan st
 
 				if time.Since(last) > throttle {
 					dst.Seek(0, 0)
+					dst.Truncate(0)
 					src.Dump(dst)
 				}
 			}
@@ -59,7 +65,7 @@ func Persist(src Dumper, dst io.ReadWriteSeeker, throttle time.Duration) chan st
 	return knob
 }
 
-func Load(src io.ReadWriteSeeker, dst Loader) error {
+func Load(src RWST, dst Loader) error {
 	src.Seek(0, 0)
 	return dst.Load(src)
 }

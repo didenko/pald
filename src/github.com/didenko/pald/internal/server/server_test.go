@@ -19,6 +19,7 @@ package server
 import (
 	"bufio"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -56,7 +57,9 @@ func TestPaldHttp(t *testing.T) {
 		{request: "/del?svc=er", httpCode: http.StatusBadRequest, respFore: "Port number is missing"},
 	}
 
-	go Run(testPort, 49200, 49202)
+	go Run(testPort, 49200, 49202, "./dump.tmp")
+
+	defer os.Remove("./dump.tmp")
 
 	for _, tc := range testCases {
 

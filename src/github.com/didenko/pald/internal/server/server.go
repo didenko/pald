@@ -20,13 +20,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/didenko/pald/internal/persist"
 	"github.com/didenko/pald/internal/registry"
 )
 
 var (
 	reg *registry.Registry
 	err error
+
+	flusher chan struct{}
 )
 
 func init() {
@@ -35,13 +40,19 @@ func init() {
 	http.HandleFunc("/del", del)
 }
 
-func Run(portSvr, portMin, portMax uint16) {
+func Run(portSvr, portMin, portMax uint16, dumpName string) {
 
 	reg, err = registry.New(portMin, portMax)
-
 	if err != nil {
 		log.Panic(err)
 	}
+
+	dump, err := os.OpenFile(dumpName, os.O_RDWR|os.O_CREATE, 0660)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	flusher = persist.Persist(reg, dump, time.Second)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", portSvr), nil))
 }

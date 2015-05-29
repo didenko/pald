@@ -21,19 +21,24 @@ import (
 	"io"
 )
 
-type StringReadWriteSeeker struct {
+type StringRWST struct {
 	s   string
 	pos int
 }
 
 const maxint = int64(^uint(0) >> 1)
 
-func (sw *StringReadWriteSeeker) Write(p []byte) (n int, err error) {
+func (sw *StringRWST) Write(p []byte) (n int, err error) {
 	sw.s = sw.s[:sw.pos] + string(p)
 	return len(p), nil
 }
 
-func (sw *StringReadWriteSeeker) Seek(offset int64, whence int) (int64, error) {
+func (sw *StringRWST) Truncate(size int64) error {
+	sw.s = sw.s[:size]
+	return nil
+}
+
+func (sw *StringRWST) Seek(offset int64, whence int) (int64, error) {
 	var newOffset int64
 	switch whence {
 	case 0:
@@ -55,7 +60,7 @@ func (sw *StringReadWriteSeeker) Seek(offset int64, whence int) (int64, error) {
 	}
 }
 
-func (sw *StringReadWriteSeeker) Read(p []byte) (n int, err error) {
+func (sw *StringRWST) Read(p []byte) (n int, err error) {
 	is, ip := 0, 0
 	next := false
 
@@ -73,11 +78,11 @@ func (sw *StringReadWriteSeeker) Read(p []byte) (n int, err error) {
 	return ip, nil
 }
 
-func (sw *StringReadWriteSeeker) Get() string {
+func (sw *StringRWST) Get() string {
 	return sw.s
 }
 
-func (sw *StringReadWriteSeeker) Set(s string) {
+func (sw *StringRWST) Set(s string) {
 	sw.pos = 0
 	sw.s = s
 }

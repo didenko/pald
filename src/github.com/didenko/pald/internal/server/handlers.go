@@ -69,6 +69,8 @@ func set(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	flusher <- struct{}{}
+
 	w.Header().Add("Content-Type", "text/plain")
 	fmt.Fprintf(w, "%d\n", port)
 }
@@ -95,6 +97,8 @@ func del(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reg.Forget(uint16(port))
+
+	flusher <- struct{}{}
 
 	w.Header().Add("Content-Type", "text/plain")
 	fmt.Fprintln(w, "OK")
