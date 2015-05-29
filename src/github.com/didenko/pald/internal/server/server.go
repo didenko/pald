@@ -52,6 +52,11 @@ func Run(portSvr, portMin, portMax uint16, dumpName string) {
 		log.Panic(err)
 	}
 
+	err = persist.Load(dump, reg)
+	if err != nil {
+		log.Panic(err)
+	}
+
 	flusher = persist.Persist(reg, dump, time.Second)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", portSvr), nil))
