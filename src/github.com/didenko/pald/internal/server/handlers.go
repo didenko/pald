@@ -22,7 +22,15 @@ import (
 	"strconv"
 )
 
+func cacheOff(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+}
+
 func get(w http.ResponseWriter, r *http.Request) {
+
+	cacheOff(w)
 
 	err = r.ParseForm()
 	if err != nil {
@@ -50,6 +58,8 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 func set(w http.ResponseWriter, r *http.Request) {
 
+	cacheOff(w)
+
 	err = r.ParseForm()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -76,6 +86,8 @@ func set(w http.ResponseWriter, r *http.Request) {
 }
 
 func del(w http.ResponseWriter, r *http.Request) {
+
+	cacheOff(w)
 
 	err = r.ParseForm()
 	if err != nil {
