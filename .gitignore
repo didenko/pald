@@ -34,6 +34,8 @@ _testmain.go
 !/.gitignore
 !/src
 !/vendor
+!/README.md
+!/LICENSE
 
 /vendor/*
 !/vendor/src
