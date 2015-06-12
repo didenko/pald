@@ -109,25 +109,31 @@ func (r *Registry) Forget(port uint16) {
 }
 
 // Dump writes out all registry's services
-func (r *Registry) Dump(w io.Writer) (err error) {
+func (r *Registry) Dump(w io.Writer) (int, error) {
 
 	r.RLock()
 	defer r.RUnlock()
 
-	buf := bufio.NewWriter(w)
-	min, max := uint16(0), ^uint16(0)
+	var (
+		wrote, n int = 0, 0
+		err      error
+		buf      *bufio.Writer = bufio.NewWriter(w)
+		min      uint16        = 0
+		max      uint16        = ^uint16(0)
+	)
 
 	for p, next := min, min < max; next; p, next = p+1, p < max {
 
 		if s, ok := r.byport[p]; ok {
 
-			_, err = fmt.Fprintf(buf, "%s\t%d\t%s\n", s.name, s.port, strings.Join(s.addr, ","))
+			n, err = fmt.Fprintf(buf, "%s\t%d\t%s\n", s.name, s.port, strings.Join(s.addr, ","))
+			wrote += n
 			if err != nil {
-				return err
+				return wrote, err
 			}
 		}
 	}
-	return buf.Flush()
+	return wrote, buf.Flush()
 }
 
 // Load reads all the services from r.

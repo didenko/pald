@@ -101,7 +101,7 @@ func TestWrite(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = reg.Dump(dst)
+	_, err = reg.Dump(dst)
 	if err != nil {
 		t.Error(err)
 	}
