@@ -22,7 +22,7 @@ import (
 )
 
 type Dumper interface {
-	Dump(w io.Writer) (err error)
+	Dump(w io.Writer) (bytes int, err error)
 }
 
 type RWST interface {
