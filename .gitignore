@@ -32,6 +32,7 @@ _testmain.go
 
 /*
 !/.gitignore
+!/.gitattributes
 !/src
 !/vendor
 !/README.md
