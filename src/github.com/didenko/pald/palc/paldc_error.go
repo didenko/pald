@@ -17,7 +17,7 @@ func (pe *PalcError) Error() string {
 		pe.message)
 }
 
-func NewFromResp(svr string, port uint16, status int, body string) error {
+func newFromResp(svr string, port uint16, status int, body string) error {
 
 	if status < 300 {
 		return nil
@@ -26,7 +26,7 @@ func NewFromResp(svr string, port uint16, status int, body string) error {
 	return &PalcError{body, status, svr, port}
 }
 
-func NewFromError(svr string, port uint16, err error) error {
+func newFromError(svr string, port uint16, err error) error {
 
 	if err == nil {
 		return nil

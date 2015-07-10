@@ -28,18 +28,18 @@ func (p *Palc) request(verb, param, value string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp == nil {
-		return "", NewFromError(p.svr, p.port, err)
+		return "", newFromError(p.svr, p.port, err)
 	}
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		return "", NewFromError(p.svr, p.port, err)
+		return "", newFromError(p.svr, p.port, err)
 	}
 
 	body := string(bodyBytes)
 
-	if err = NewFromResp(p.svr, p.port, resp.StatusCode, body); err != nil {
+	if err = newFromResp(p.svr, p.port, resp.StatusCode, body); err != nil {
 		return "", err
 	}
 
@@ -61,7 +61,7 @@ func (p *Palc) byName(verb string, name string) (uint16, error) {
 
 	var port uint16
 	_, err = fmt.Sscan(body, &port)
-	return port, NewFromError(p.svr, p.port, err)
+	return port, newFromError(p.svr, p.port, err)
 }
 
 func (p *Palc) Get(service string) (uint16, error) {
