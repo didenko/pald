@@ -9,7 +9,7 @@ function fail() {
   $0 [-p <pald port>] get|set <service>
   $0 [-p <pald port>] del     <port>
 
-  Default port is ${PORT}
+  Default port is ${DEF_PALD_PORT}
 	EOU
 
   exit 1
@@ -27,14 +27,15 @@ function validport() {
   }
 }
 
-PORT=49200
+DEF_PALD_PORT=49200
+PALD_PORT=${DEF_PALD_PORT}
 
 while getopts ":p:" opt
 do
   case ${opt} in
     p )
       validport ${OPTARG} "pald port"
-      PORT=${OPTARG}
+      PALD_PORT=${OPTARG}
       ;;
     \? )
       fail invalid parameter: -${OPTARG}
@@ -46,11 +47,11 @@ shift "$((OPTIND - 1))"
 
 case ${1} in
   get | set )
-    curl --fail --data service=${2} http://localhost:${PORT}/${1}
+    curl --fail --data service=${2} http://localhost:${PALD_PORT}/${1}
     ;;
   del )
     validport ${2} "resource port"
-    curl --fail --data port=${2} http://localhost:${PORT}/${1}
+    curl --fail --data port=${2} http://localhost:${PALD_PORT}/${1}
     ;;
   * )
     fail invalid request name: ${1}
