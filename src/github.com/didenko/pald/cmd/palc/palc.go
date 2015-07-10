@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/didenko/pald/cmd/palclib"
+	"github.com/didenko/pald/palc"
 )
 
 const uint64max = uint(^uint16(0))
@@ -41,7 +41,7 @@ func init() {
 }
 
 func main() {
-	p := palclib.New("localhost", paldPort)
+	p := palc.New("localhost", paldPort)
 
 	switch action {
 

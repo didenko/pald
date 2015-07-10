@@ -1,4 +1,4 @@
-package palclib
+package palc
 
 import (
 	"fmt"
