@@ -48,6 +48,33 @@ Three URLs are currently supported (with HTTP reply codes):
 <code>400</code> - an error message in case of all other errors</td></tr>
 </table>
 
+## Code tree
+
+```
+pald/
+|
+|-- cmd
+|    |
+|    |-- bash/palc.sh : Example bash client script,
+|    |                  relies on a modern curl utility
+|    |                  present
+|    |
+|    |-- palc/palc.go : Example Go client utility source
+|    |                  code, no utility dependencies
+|    |
+|    |-- pald/pald.go : The pald utility main package in Go
+|
+|-- internal/...      : Non-exported source code of pald
+|                       inner logic
+|
+|-- palc/...          : A client package which can be copied
+                        or imported in executables which are
+                        querying pald
+```
+
 ## Porting to other platforms
 
 At this time `pald` is only compatible with Mac OS X, but it is easy to fix. Please, add an appropriate `internal\platform\specific_<platform>.go` file for your platform and send me a pull request.
+
+The only reason for platform dependency is to properly locate directories for temporary and configuration files.
+
